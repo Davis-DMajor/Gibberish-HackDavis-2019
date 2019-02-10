@@ -43,7 +43,7 @@ def arm_detect(frame):
     (boxes, scores, classes, num) = sess.run(
         [detection_boxes, detection_scores, detection_classes, num_detections],
         feed_dict={image_tensor: frame_expanded})
-    """"
+    """
     if scores[0][0] > 0.7:
         height, width = frame.shape[:2]
         current_time = timer

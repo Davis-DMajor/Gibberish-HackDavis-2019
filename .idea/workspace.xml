@@ -181,8 +181,8 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python.Voice_to_Text" />
       <item itemvalue="Python.Button" />
+      <item itemvalue="Python.Voice_to_Text" />
     </list>
   </component>
   <component name="SvnConfiguration">

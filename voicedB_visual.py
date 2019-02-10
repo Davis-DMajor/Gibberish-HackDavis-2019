@@ -126,6 +126,23 @@ class voice_input():
                 # update the graph instantly and refresh
                 line.set_ydata(data_int)
                 fig.canvas.draw()
+                dB_max1 = maxminline.Line2D([0, self.CHUNK], [100, 100])
+                dB_max2 = maxminline.Line2D([0, self.CHUNK], [-100, -100])
+                dB_min1 = maxminline.Line2D([0, self.CHUNK], [10, 10])
+                dB_min2 = maxminline.Line2D([0, self.CHUNK], [-10, -10])
+
+                dB_max1.set_color("#ffc0c0")
+                dB_max2.set_color("#ffc0c0")
+                dB_min1.set_color("#c0f1ff")
+                dB_min2.set_color("#c0f1ff")
+
+                plt.legend([dB_max1, dB_min1], ["Max dB", "Min dB"], loc='lower right')
+
+                ax.add_line(dB_max1)
+                ax.add_line(dB_max2)
+                ax.add_line(dB_min1)
+                ax.add_line(dB_min2)
+                
                 fig.show()
                 fig.canvas.flush_events()
         # print the stat page

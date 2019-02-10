@@ -35,7 +35,7 @@ detection_classes = detection_graph.get_tensor_by_name('detection_classes:0')
 num_detections = detection_graph.get_tensor_by_name('num_detections:0')
 
 
-def arm_detect(frame, prev_time, prev_avg_cood):
+def arm_detect(frame, prev_time, prev_avg_cood, speed):
     current_avg_cood = None
     frame_expanded = np.expand_dims(frame, axis=0)
     # Perform the actual detection by running the model with the image as input
@@ -53,7 +53,7 @@ def arm_detect(frame, prev_time, prev_avg_cood):
         delta = math.sqrt(
           (current_avg_cood[0] - prev_avg_cood[0]) ** 2 + (current_avg_cood[1] - prev_avg_cood[1]) ** 2) * 2.54 / 96
         speed = delta / (time.clock() - prev_time)
-        print(speed)
+        #print(speed)
     else:
         current_avg_cood = prev_avg_cood
 
@@ -69,4 +69,5 @@ def arm_detect(frame, prev_time, prev_avg_cood):
         line_thickness=8,
         min_score_thresh=0.60)
 
-    return frame, time.clock(), current_avg_cood
+    return frame, time.clock(), current_avg_cood, speed
+

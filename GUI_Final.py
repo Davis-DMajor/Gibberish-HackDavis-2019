@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('TkAgg')
 from tkinter import *
 from tkinter import font
 import cv2
@@ -7,7 +9,9 @@ import threading
 import NLP
 import PIL
 from PIL import Image, ImageTk
-#from Object_detection_webcam import arm_detect
+import matplotlib.pyplot as plt
+from collections import OrderedDict
+from Object_detection_webcam import arm_detect
 
 WIDTH = 640 * 2
 HEIGHT = 533.33 * 2
@@ -16,9 +20,17 @@ prev_avg_cood = [0, 0]
 video = cv2.VideoCapture(0)
 root = Tk()
 root.title("Gibberish")
+ws = root.winfo_screenwidth()  # width of the screen
+hs = root.winfo_screenheight() # height of the screen
+x = (ws/2) - (WIDTH/2)
+y = (hs/2) - (HEIGHT/2)
+root.geometry('%dx%d+%d+%d' % (WIDTH, HEIGHT, x, y))
+
 canvas = Canvas(root, height=HEIGHT, width=WIDTH)
 canvas.pack()
 logo_image = PhotoImage(file="./Source_Image/GibberishLogo.png")
+logo_image = logo_image.zoom(35)
+logo_image = logo_image.subsample(30)
 
 
 def Start_Transcribing():
@@ -42,20 +54,19 @@ def intro():
 
     def open_help():
         def show_help_buttons():
-            about_button.place(rely=0.1, relx=0.85, relwidth=0.1, relheight=0.05)
-            tutorial_button.place(rely=0.2, relx=0.85, relwidth=0.1, relheight=0.05)
-            history_button.place(rely=0.3, relx=0.85, relwidth=0.1, relheight=0.05)
-            settings_button.place(rely=0.4, relx=0.85, relwidth=0.1, relheight=0.05)
-            exit_button.place(rely=0.5, relx=0.85, relwidth=0.1, relheight=0.05)
+            about_button.place(rely=0.025, relx=0.875, relwidth=0.1, relheight=0.05)
+            history_button.place(rely=0.125, relx=0.875, relwidth=0.1, relheight=0.05)
+            exit_button.place(rely=0.225, relx=0.875, relwidth=0.1, relheight=0.05)
+            button.place(rely=0.5, relx=0.85, relwidth=0.1, relheight=0.05)
+
 
         def close_help():
             arrow_button.destroy()
             help_desk.destroy()
             about_button.place(relwidth=0, relheight=0)
-            tutorial_button.place(relwidth=0, relheight=0)
             history_button.place(relwidth=0, relheight=0)
-            settings_button.place(relwidth=0, relheight=0)
             exit_button.place(relwidth=0, relheight=0)
+
 
         about_open_frame = Frame(root, bd=50, bg="#F1F1F1")
 
@@ -80,26 +91,23 @@ def intro():
         settings_button = Button(root, text="Settings", relief="flat", font=("Merriweather", 15), bg="#E5E5E5")
         exit_button = Button(root, text="Exit", relief="flat", font=("Merriweather", 15), bg="#E5E5E5")
 
-    frame = Frame(root, bd=10)
+    frame = Frame(root)
     frame.place(relx=0.5, rely=0.1, relwidth=0.75, relheight=0.65, anchor="n")
-    lower_frame = Frame(root, bd=5)
+    lower_frame = Frame(root)
     lower_frame.place(relx=0.5, rely=0.5, relwidth=1, relheight=0.5, anchor="n")
 
-    logo_label = Label(frame, image=logo_image)
+    logo_label = Label(frame, image=logo_image, relief="flat")
     logo_label.place(relwidth=1, relheight=1)
     help_image = PhotoImage(file="./Source_Image/3lines.png")
     help_image = help_image.zoom(15)
     help_image = help_image.subsample(30)
-    help_button = Button(root, image=help_image, relief=SUNKEN, command=open_help)
+    help_button = Button(root, image=help_image, relief="flat", command=open_help)
     help_button.place(relx=0.92, rely=0.05, relheight=0.027)
 
-    startButton = Button(lower_frame, text="Start", relief=SUNKEN, bg="#A2A2A2", command=lambda: (chapter2(),
-                                                                                                  Start_Transcribing(),
-                                                                                                  ),
-                         font=("Source Serif Variable", 20))
-    startButton.place(relx=0.40, rely=0.4, relwidth=0.2, relheight=0.2)
-
-
+    startButton = Button(lower_frame, text="Start", relief="flat", command=lambda: (chapter2(),
+                                                                                                 start_Transcribing(),
+                                                                                                  ),font=("Source Serif Variable", 30))
+    startButton.place(relx=0.40, rely=0.35, relwidth=0.2, relheight=0.2)),font=("Source Serif Variable", 20))
     version_label = Label(lower_frame, text="V1.0.0", font=("Source Serif Variable", 11))
     version_label.place(relx=0.05, rely=0.90)
     team_name_label = Label(lower_frame, text="A product of D_Major", font=("Source Serif Variable", 11))
@@ -116,14 +124,20 @@ NLP.analyze_overall_speech_sentiment("./Output Files/Test.txt")
 
 
 def chapter2():
+    d_speed = dict([(0, 0)])
+    speed = 0
+
     def show_frame():
+        speed_temp = 0
         global prev_time, prev_avg_cood
         _, frame = video.read()
         height, width = frame.shape[:2]
         frame = cv2.resize(frame, (0, 0), fx=WIDTH / width, fy=HEIGHT / height)
         frame = cv2.flip(frame, 1)
         # print(prev_avg_cood)
-        img, prev_time, prev_avg_cood = arm_detect(frame, prev_time, prev_avg_cood)
+        img, prev_time, prev_avg_cood, speed_temp = arm_detect(frame, prev_time, prev_avg_cood, speed)
+        d_speed.update({prev_time: speed_temp})
+
         # print(prev_avg_cood)
         cv2image = cv2.cvtColor(img, cv2.COLOR_BGR2RGBA)
         img = PIL.Image.fromarray(cv2image)
@@ -143,18 +157,27 @@ def chapter2():
 
 
     stop_button = Button(lower_frame, image=stop_image, relief="flat", command=lambda: (root.destroy(), chapter3()))
-    stop_button.place(relx=0.2, rely=0, relheight=1)
+    stop_button.place(relx=0.1, rely=0, relheight=1)
     screenshot_button = Button(lower_frame, image=screenshot_image, relief="flat")
     screenshot_button.place(relx=0.9, rely=0, relheight=1)
 
-    wave_label = Label(lower_frame, text="Start recording. Please talk. Say \"Quit\" or \"Exit\" to stop", bg="#ffffff",
-                       font=("Source Serif Variable", 25))
-    wave_label.place(relx=0.3, rely=0.25)
+    wave_label = Label(lower_frame, text="Start recording. Please talk. Say \"Quit\" or \"Exit\" to stop",font=("Source Serif Variable", 25))
+    wave_label.place(relx=0.5, rely=0.5, anchor="center")
 
     show_frame()
 
+    tot_value = 0
+    key_time = 0
+    for key, value in d_speed.items():
+        key_time = key
+        tot_value += value
+    score = tot_value/key_time
+    file = open("./speed.txt")
+    file.write(str(score))
+
 
 def chapter3():
+    chapter2().showplot()
     class StatFrame(Tk):
         def __init__(self, *args, **kwargs):
             Tk.__init__(self, *args, **kwargs)
@@ -282,8 +305,9 @@ def chapter3():
             self.controller = controller
             titleLabel = Label(self, text="Speech to Text", font=("Source Serif Variable", 25))
             titleLabel.place(relx=0.5, rely=0.3, anchor="n")
-            with open("./Output Files/Test.txt", "r") as f:
-                Label(self, text=f.read(), wraplength=500, font=("Source Serif Variable", 15)).place(relx=0.5, rely=0.4, anchor="n")
+            with open("./Test.txt", "r") as f:
+                Label(self, text=f.read(), wraplength=500).place(relx=0.5, rely=0.4, anchor="n")
+
             repeatedLabel = Label(self, text="Number of repeated words :", font=("Source Serif Variable", 25))
             repeatedLabel.place(relx=0.45, rely=0.8, anchor="n")
             with open("./Output Files/Repeated.txt", "r") as f:

@@ -142,7 +142,7 @@ class voice_input():
                 ax.add_line(dB_max2)
                 ax.add_line(dB_min1)
                 ax.add_line(dB_min2)
-                
+
                 fig.show()
                 fig.canvas.flush_events()
         # print the stat page
